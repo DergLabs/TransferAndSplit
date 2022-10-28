@@ -7,12 +7,17 @@ import logging
 from time import sleep
 from tqdm import tqdm
 
-revision = "1.1.0"  # <-- Update me every time a change is made
+revision = "1.1.2"  # <-- Update me every time a change is made
 
 USER_PATH = os.path.expanduser('~')
 
 JPEG_EXTENSION = ".JPG"
 RAW_EXTENSION = ".RAF"
+
+SD_NAME = "Untitled"
+SD_FOLDER_NAME = "DCIM"
+
+FOLDER_SAVE_LOCATION = "/Desktop/"
 
 
 def validate_input(userinput, type):
@@ -64,8 +69,8 @@ if __name__ == '__main__':
     jpg_folder_name = input("Enter Folder name for JPEG's: ")
     raw_folder_name = input("Enter Folder name for RAW's: ")
 
-    JPEG_FOLDER_PATH = USER_PATH + "/Desktop/" + jpg_folder_name
-    RAW_FOLDER_PATH = USER_PATH + "/Desktop/" + raw_folder_name
+    JPEG_FOLDER_PATH = USER_PATH + FOLDER_SAVE_LOCATION + jpg_folder_name
+    RAW_FOLDER_PATH = USER_PATH + FOLDER_SAVE_LOCATION + raw_folder_name
 
     try:  # Check and see if the folders for LDCM and impedance board already exist, if so just keep going on
         os.mkdir(JPEG_FOLDER_PATH)  # Created the directory for the impedance board files
@@ -75,7 +80,7 @@ if __name__ == '__main__':
 
     run = True
     while run:
-        SD_PATH = "/Volumes/Untitled/DCIM/"
+        SD_PATH = "/Volumes/" + SD_NAME + "/" + SD_FOLDER_NAME
         available_folders = os.listdir(SD_PATH)
 
         print("Available Folders for File Transfer: {}".format(available_folders))
