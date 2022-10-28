@@ -8,14 +8,14 @@ import logging
 from time import sleep
 from tqdm import tqdm
 
-revision = "1.1.4"  # <-- Update me every time a change is made
+revision = "1.2.0"  # <-- Update me every time a change is made
 
 
 SD_FOLDER_NAME = "DCIM"
 FOLDER_SAVE_LOCATION = "/Desktop/"
 
 
-def validate_input(userinput, type):
+def validate_input(userinput, available_folders, type):
     if type == "exit":
         while True:
             try:
@@ -35,21 +35,23 @@ def validate_input(userinput, type):
                     break
                 else:
                     print("No folders match that name")
-                    userinput = input("Enter name of fuji folder to transfer files from: ")
+                    userinput = input("Enter name of fuji f2older to transfer files from: ")
                     userinput = userinput.upper()
             except:
-                print("Invalid input")
+                print("No folders match that name")
+                userinput = input("Enter name of fuji f1older to transfer files from: ")
+                userinput = userinput.upper()
 
 
-def transfer_jpeg(jpeg_total_size, jpeg_file_size, SD_PATH, JPEG_FOLDER_PATH):
+def transfer_jpeg(jpeg_total_size, jpeg_file_size, SD_PATH, JPEG_FOLDER_PATH, selected_jpeg):
     with tqdm(desc="JPG Transfer Progress", total=jpeg_total_size, initial=0, unit="B", unit_divisor=1024, leave=True,
               unit_scale=True) as jpg_progress:
-        for i, file_name in enumerate(selected_jpg):
+        for i, file_name in enumerate(selected_jpeg):
             shutil.copy(os.path.join(SD_PATH, file_name), JPEG_FOLDER_PATH)
             jpg_progress.update(jpeg_file_size)
 
 
-def transfer_raw(raw_total_size, raw_file_size, SD_PATH, RAW_FOLDER_PATH):
+def transfer_raw(raw_total_size, raw_file_size, SD_PATH, RAW_FOLDER_PATH, selected_raw):
     with tqdm(desc="RAW Transfer Progress", total=raw_total_size, initial=0, unit="B", unit_divisor=1024, leave=True,
               unit_scale=True) as raw_progress:
         for i, file_name in enumerate(selected_raw):
@@ -92,7 +94,7 @@ def run_macos():
 
         fuji_folder_name = input("Enter name of fuji folder to transfer files from: ")
         fuji_folder_name = fuji_folder_name.upper()
-        fuji_folder_name = validate_input(fuji_folder_name, "filename")
+        fuji_folder_name = validate_input(fuji_folder_name, available_folders, "filename")
 
         SD_PATH = SD_PATH + fuji_folder_name
 
@@ -104,34 +106,34 @@ def run_macos():
         print("JPG Extension found: {}".format(JPEG_EXTENSION))
         print("RAW Extension found: {}\n".format(RAW_EXTENSION))
 
-        selected_jpg = [jpg for jpg in sd_files if jpg.endswith(JPEG_EXTENSION)]
+        selected_jpeg = [jpg for jpg in sd_files if jpg.endswith(JPEG_EXTENSION)]
         selected_raw = [raw for raw in sd_files if raw.endswith(RAW_EXTENSION)]
 
-        jpeg_cnt = len(selected_jpg)
+        jpeg_cnt = len(selected_jpeg)
         raw_cnt = len(selected_raw)
 
         print("{} JPEG Files".format(jpeg_cnt))
         print("{} RAW Files".format(raw_cnt))
 
-        jpeg_file_size = (os.path.getsize(SD_PATH + "/" + selected_jpg[0]))
+        jpeg_file_size = (os.path.getsize(SD_PATH + "/" + selected_jpeg[0]))
         raw_file_size = (os.path.getsize(SD_PATH + "/" + selected_raw[0]))
 
-        jpeg_total_size = (os.path.getsize(SD_PATH + "/" + selected_jpg[0])) * jpeg_cnt
+        jpeg_total_size = (os.path.getsize(SD_PATH + "/" + selected_jpeg[0])) * jpeg_cnt
         raw_total_size = (os.path.getsize(SD_PATH + "/" + selected_raw[0])) * raw_cnt
 
         print("\nTransferring JPG Files")
-        transfer_jpeg(jpeg_total_size, jpeg_file_size, SD_PATH, JPEG_FOLDER_PATH)
+        transfer_jpeg(jpeg_total_size, jpeg_file_size, SD_PATH, JPEG_FOLDER_PATH, selected_jpeg)
         print("JPEG File transfer Complete\n")
         sleep(1)
 
         print("\nTransferring RAW Files")
-        transfer_raw(raw_total_size, raw_file_size, SD_PATH, RAW_FOLDER_PATH)
+        transfer_raw(raw_total_size, raw_file_size, SD_PATH, RAW_FOLDER_PATH, selected_raw)
         print("RAW File transfer Complete\n")
         sleep(1)
 
         leave = input("Exit?: Y/N\n")
         leave = leave.upper()
-        validate_input(leave, "exit")
+        validate_input(leave, [], "exit")
         if leave == "Y":
             break
 
@@ -167,46 +169,46 @@ def run_windows():
 
         fuji_folder_name = input("Enter name of fuji folder to transfer files from: ")
         fuji_folder_name = fuji_folder_name.upper()
-        fuji_folder_name = validate_input(fuji_folder_name, "filename")
+        fuji_folder_name = validate_input(fuji_folder_name, available_folders, "filename")
 
         SD_PATH = SD_PATH + fuji_folder_name
 
         sd_files = os.listdir(SD_PATH)
 
-        JPEG_EXTENSION = get_file_extension(sd_files[1])  # Assumes that the files start with raw, then jpg
-        RAW_EXTENSION = get_file_extension(sd_files[0])
+        JPEG_EXTENSION = get_file_extension(sd_files[0])  # Assumes that the files start with raw, then jpg
+        RAW_EXTENSION = get_file_extension(sd_files[1])
 
         print("JPG Extension found: {}".format(JPEG_EXTENSION))
         print("RAW Extension found: {}\n".format(RAW_EXTENSION))
 
-        selected_jpg = [jpg for jpg in sd_files if jpg.endswith(JPEG_EXTENSION)]
+        selected_jpeg = [jpg for jpg in sd_files if jpg.endswith(JPEG_EXTENSION)]
         selected_raw = [raw for raw in sd_files if raw.endswith(RAW_EXTENSION)]
 
-        jpeg_cnt = len(selected_jpg)
+        jpeg_cnt = len(selected_jpeg)
         raw_cnt = len(selected_raw)
 
         print("{} JPEG Files".format(jpeg_cnt))
         print("{} RAW Files".format(raw_cnt))
 
-        jpeg_file_size = (os.path.getsize(SD_PATH + "/" + selected_jpg[0]))
+        jpeg_file_size = (os.path.getsize(SD_PATH + "/" + selected_jpeg[0]))
         raw_file_size = (os.path.getsize(SD_PATH + "/" + selected_raw[0]))
 
-        jpeg_total_size = (os.path.getsize(SD_PATH + "/" + selected_jpg[0])) * jpeg_cnt
+        jpeg_total_size = (os.path.getsize(SD_PATH + "/" + selected_jpeg[0])) * jpeg_cnt
         raw_total_size = (os.path.getsize(SD_PATH + "/" + selected_raw[0])) * raw_cnt
 
         print("\nTransferring JPG Files")
-        transfer_jpeg(jpeg_total_size, jpeg_file_size, SD_PATH, JPEG_FOLDER_PATH)
+        transfer_jpeg(jpeg_total_size, jpeg_file_size, SD_PATH, JPEG_FOLDER_PATH, selected_jpeg)
         print("JPEG File transfer Complete\n")
         sleep(1)
 
         print("\nTransferring RAW Files")
-        transfer_raw(raw_total_size, raw_file_size, SD_PATH, RAW_FOLDER_PATH)
+        transfer_raw(raw_total_size, raw_file_size, SD_PATH, RAW_FOLDER_PATH, selected_raw)
         print("RAW File transfer Complete\n")
         sleep(1)
 
         leave = input("Exit?: Y/N\n")
         leave = leave.upper()
-        validate_input(leave, "exit")
+        validate_input(leave, [], "exit")
         if leave == "Y":
             break
 
