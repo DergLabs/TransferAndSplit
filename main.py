@@ -7,14 +7,14 @@ import logging
 from time import sleep
 from tqdm import tqdm
 
-revision = "1.1.2"  # <-- Update me every time a change is made
+revision = "1.1.3"  # <-- Update me every time a change is made
 
 USER_PATH = os.path.expanduser('~')
 
 JPEG_EXTENSION = ".JPG"
 RAW_EXTENSION = ".RAF"
 
-SD_NAME = "Untitled"
+SD_NAME = "ExternalSSD"
 SD_FOLDER_NAME = "DCIM"
 
 FOLDER_SAVE_LOCATION = "/Desktop/"
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     run = True
     while run:
-        SD_PATH = "/Volumes/" + SD_NAME + "/" + SD_FOLDER_NAME
+        SD_PATH = "/Volumes/" + SD_NAME + "/" + SD_FOLDER_NAME + "/"
         available_folders = os.listdir(SD_PATH)
 
         print("Available Folders for File Transfer: {}".format(available_folders))
