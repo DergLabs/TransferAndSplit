@@ -2,21 +2,16 @@
 # Goal of this program is to access SD Card and split JPEG and RAW files into their own folders one at a time
 
 import os
+import platform
 import shutil
 import logging
 from time import sleep
 from tqdm import tqdm
 
-revision = "1.1.3"  # <-- Update me every time a change is made
+revision = "1.1.4"  # <-- Update me every time a change is made
 
-USER_PATH = os.path.expanduser('~')
 
-JPEG_EXTENSION = ".JPG"
-RAW_EXTENSION = ".RAF"
-
-SD_NAME = "ExternalSSD"
 SD_FOLDER_NAME = "DCIM"
-
 FOLDER_SAVE_LOCATION = "/Desktop/"
 
 
@@ -62,14 +57,17 @@ def transfer_raw(raw_total_size, raw_file_size, SD_PATH, RAW_FOLDER_PATH):
             raw_progress.update(raw_file_size)
 
 
-if __name__ == '__main__':
-    print("Written By: Dragon Enjoyer :3")
-    print("Program Version: {}\n".format(revision))
+def get_file_extension(file):
+    extension = os.path.splitext(file)
+    return extension[1]
 
-    jpg_folder_name = input("Enter Folder name for JPEG's: ")
+
+def run_macos():
+    USER_PATH = os.path.expanduser('~')
+    jpeg_folder_name = input("Enter Folder name for JPEG's: ")
     raw_folder_name = input("Enter Folder name for RAW's: ")
 
-    JPEG_FOLDER_PATH = USER_PATH + FOLDER_SAVE_LOCATION + jpg_folder_name
+    JPEG_FOLDER_PATH = USER_PATH + FOLDER_SAVE_LOCATION + jpeg_folder_name
     RAW_FOLDER_PATH = USER_PATH + FOLDER_SAVE_LOCATION + raw_folder_name
 
     try:  # Check and see if the folders for LDCM and impedance board already exist, if so just keep going on
@@ -78,10 +76,17 @@ if __name__ == '__main__':
     except OSError as error:
         logging.warning("Filepaths already exist")
 
+    SD_NAME = input("Enter SD Card Name: ")
+
     run = True
     while run:
         SD_PATH = "/Volumes/" + SD_NAME + "/" + SD_FOLDER_NAME + "/"
-        available_folders = os.listdir(SD_PATH)
+
+        try:
+            available_folders = os.listdir(SD_PATH)
+        except OSError as error:
+            logging.error("No SD Card found with name: {}".format(SD_NAME))
+            break
 
         print("Available Folders for File Transfer: {}".format(available_folders))
 
@@ -92,6 +97,12 @@ if __name__ == '__main__':
         SD_PATH = SD_PATH + fuji_folder_name
 
         sd_files = os.listdir(SD_PATH)
+
+        JPEG_EXTENSION = get_file_extension(sd_files[1])  # Assumes that the files start with raw, then jpg
+        RAW_EXTENSION = get_file_extension(sd_files[0])
+
+        print("JPG Extension found: {}".format(JPEG_EXTENSION))
+        print("RAW Extension found: {}\n".format(RAW_EXTENSION))
 
         selected_jpg = [jpg for jpg in sd_files if jpg.endswith(JPEG_EXTENSION)]
         selected_raw = [raw for raw in sd_files if raw.endswith(RAW_EXTENSION)]
@@ -123,3 +134,95 @@ if __name__ == '__main__':
         validate_input(leave, "exit")
         if leave == "Y":
             break
+
+
+def run_windows():
+    USER_PATH = os.path.expanduser('~')
+    jpeg_folder_name = input("Enter Folder name for JPEG's: ")
+    raw_folder_name = input("Enter Folder name for RAW's: ")
+
+    JPEG_FOLDER_PATH = USER_PATH + "\\" + FOLDER_SAVE_LOCATION + "\\" + jpeg_folder_name
+    RAW_FOLDER_PATH = USER_PATH + "\\" + FOLDER_SAVE_LOCATION + "\\" +  raw_folder_name
+
+    try:  # Check and see if the folders for LDCM and impedance board already exist, if so just keep going on
+        os.mkdir(JPEG_FOLDER_PATH)  # Created the directory for the impedance board files
+        os.mkdir(RAW_FOLDER_PATH)  # Create the directory for the LDCM measurements
+    except OSError as error:
+        logging.warning("Filepaths already exist")
+
+    SD_NAME = input("Enter SD Card Name: ")
+    SD_DRIVE_NAME = input("Enter SD Card Drive Letter: ")
+
+    run = True
+    while run:
+        SD_PATH = SD_DRIVE_NAME + ":" + SD_FOLDER_NAME + "\\"
+
+        try:
+            available_folders = os.listdir(SD_PATH)
+        except OSError as error:
+            logging.error("No SD Card found with name: {}".format(SD_NAME))
+            break
+
+        print("Available Folders for File Transfer: {}".format(available_folders))
+
+        fuji_folder_name = input("Enter name of fuji folder to transfer files from: ")
+        fuji_folder_name = fuji_folder_name.upper()
+        fuji_folder_name = validate_input(fuji_folder_name, "filename")
+
+        SD_PATH = SD_PATH + fuji_folder_name
+
+        sd_files = os.listdir(SD_PATH)
+
+        JPEG_EXTENSION = get_file_extension(sd_files[1])  # Assumes that the files start with raw, then jpg
+        RAW_EXTENSION = get_file_extension(sd_files[0])
+
+        print("JPG Extension found: {}".format(JPEG_EXTENSION))
+        print("RAW Extension found: {}\n".format(RAW_EXTENSION))
+
+        selected_jpg = [jpg for jpg in sd_files if jpg.endswith(JPEG_EXTENSION)]
+        selected_raw = [raw for raw in sd_files if raw.endswith(RAW_EXTENSION)]
+
+        jpeg_cnt = len(selected_jpg)
+        raw_cnt = len(selected_raw)
+
+        print("{} JPEG Files".format(jpeg_cnt))
+        print("{} RAW Files".format(raw_cnt))
+
+        jpeg_file_size = (os.path.getsize(SD_PATH + "/" + selected_jpg[0]))
+        raw_file_size = (os.path.getsize(SD_PATH + "/" + selected_raw[0]))
+
+        jpeg_total_size = (os.path.getsize(SD_PATH + "/" + selected_jpg[0])) * jpeg_cnt
+        raw_total_size = (os.path.getsize(SD_PATH + "/" + selected_raw[0])) * raw_cnt
+
+        print("\nTransferring JPG Files")
+        transfer_jpeg(jpeg_total_size, jpeg_file_size, SD_PATH, JPEG_FOLDER_PATH)
+        print("JPEG File transfer Complete\n")
+        sleep(1)
+
+        print("\nTransferring RAW Files")
+        transfer_raw(raw_total_size, raw_file_size, SD_PATH, RAW_FOLDER_PATH)
+        print("RAW File transfer Complete\n")
+        sleep(1)
+
+        leave = input("Exit?: Y/N\n")
+        leave = leave.upper()
+        validate_input(leave, "exit")
+        if leave == "Y":
+            break
+
+
+if __name__ == '__main__':
+    print("Written By: Dragon Enjoyer :3")
+    print("Program Version: {}\n".format(revision))
+
+    os_type = platform.system()
+
+    if os_type == "Darwin":
+        print("Running MacOS Version\n")
+        sleep(0.5)
+        run_macos()
+    elif os_type == "Windows":
+        print("Running Windows Version\n")
+        sleep(0.5)
+        run_windows()
+
